@@ -2,270 +2,868 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Task App (iPhone Style)</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; font-family: sans-serif; }
-        body { 
-            margin: 0; 
-            background-color: #2c2f38; 
-            display: flex; 
-            justify-content: center; 
+        /* --- RESET Y VARIABLES DE DISEÑO IPHONE --- */
+        :root {
+            --bg-deep: #000000; /* Fondo principal negro puro */
+            --bg-card: #1C1C1E; /* Fondo de tarjetas y campos */
+            --bg-header: rgba(18, 18, 18, 0.8); /* Fondo de cabecera con transparencia */
+            --primary-accent: #9333EA; /* Morado vibrante para acciones */
+            --text-primary: #FFFFFF;
+            --text-secondary: #8E8E93;
+            --border-color: #38383A;
+            --shadow-ios: 0 10px 20px rgba(0,0,0,0.5);
+            --transition-ios: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            -webkit-tap-highlight-color: transparent; /* Quita el flash gris en móvil */
+        }
+
+        body {
+            background-color: #121212; /* Fondo del navegador */
+            display: flex;
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
+            color: var(--text-primary);
+            overflow: hidden;
         }
-        .app-container { 
-            width: 100%; 
-            max-width: 400px; 
-            background-color: #4a4e5a; 
-            color: white; 
-            display: flex; 
+
+        /* --- CONTENEDOR PRINCIPAL (EMULADOR DE IPHONE) --- */
+        .app-container {
+            width: 100%;
+            height: 100%;
+            max-width: 420px; /* Tamaño máximo para PC */
+            max-height: 900px; /* Altura máxima para PC */
+            background-color: var(--bg-deep);
+            display: flex;
             flex-direction: column;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            overflow: hidden;
             position: relative;
+            box-shadow: var(--shadow-ios);
+            transition: var(--transition-ios);
         }
-        .header { 
-            background-color: #3f51b5; 
-            padding: 15px; 
-            font-size: 20px; 
-            display: flex; 
-            justify-content: space-between;
+
+        /* Adaptación responsiva: Fullscreen en móvil */
+        @media (max-width: 420px) {
+            .app-container {
+                max-width: 100%;
+                max-height: 100vh;
+                height: 100vh;
+                border-radius: 0;
+            }
         }
-        .screen { 
-            display: none; 
-            flex-direction: column; 
-            padding: 20px; 
-            align-items: center; 
+        /* Bordes redondeados y notch simulado solo en PC */
+        @media (min-width: 421px) {
+            .app-container {
+                border-radius: 40px;
+                border: 8px solid #222;
+            }
+            /* Simulación visual del notch */
+            .app-container::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 150px;
+                height: 25px;
+                background: #222;
+                border-bottom-left-radius: 15px;
+                border-bottom-right-radius: 15px;
+                z-index: 1000;
+            }
+        }
+
+        /* --- CABECERA (IOS NAVBAR) --- */
+        .header {
+            height: 88px; /* Altura estándar iOS para cabecera grande */
+            background-color: var(--bg-header);
+            backdrop-filter: blur(20px); /* Efecto cristal deslumbrante */
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 20px;
+            padding-top: 30px; /* Espacio para el notch */
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            border-bottom: 0.5px solid var(--border-color);
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .header-icon-dots {
+            position: absolute;
+            right: 20px;
+            top: 55px;
+            color: var(--primary-accent);
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        /* --- SISTEMA DE PANTALLAS --- */
+        .screen {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            padding: 30px 20px;
+            overflow-y: auto; /* Scroll dentro de la pantalla */
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- ELEMENTOS DE UI REUTILIZABLES --- */
+        
+        /* Título grande estilo iOS */
+        .ios-large-title {
+            font-size: 34px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            margin-top: 10px;
+            color: var(--text-primary);
+        }
+
+        /* Campos de entrada (iPhone style) */
+        .ios-input-group {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            border: 1px solid transparent;
+            transition: var(--transition-ios);
+        }
+        
+        .ios-input-group:focus-within {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.2);
+        }
+
+        .ios-input-label {
+            color: var(--text-secondary);
+            padding: 15px;
+            font-size: 16px;
+            width: 110px;
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .ios-input-field {
             flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            padding: 15px;
+            font-size: 17px;
+            width: 100%;
         }
-        .active { display: flex; }
-        
-        /* Controles */
-        .title-box { background: white; color: black; padding: 5px 15px; margin-top: 40px; margin-bottom: 20px; font-size: 20px; }
-        .input-group { background: #cfd2d6; color: black; padding: 10px; margin-bottom: 10px; width: 100%; display: flex; }
-        .input-group label { width: 90px; }
-        .input-group input { border: none; background: transparent; border-bottom: 1px solid gray; outline: none; flex-grow: 1; }
-        
-        button { 
-            background-color: #b2bced; 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 20px; 
-            cursor: pointer; 
-            font-size: 16px; 
-            margin: 10px;
+
+        /* Botón principal (iPhone Pill Button) */
+        .ios-btn-primary {
+            background-color: var(--primary-accent);
+            color: white;
+            border: none;
+            border-radius: 28px; /* Pastilla completa */
+            padding: 16px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 25px;
+            transition: var(--transition-ios);
+            box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
         }
-        .link { color: #b2bced; cursor: pointer; margin-top: 10px; font-size: 14px; }
+
+        .ios-btn-primary:active {
+            transform: scale(0.96); /* Efecto de presión */
+            opacity: 0.8;
+        }
+
+        /* Botón secundario/texto */
+        .ios-btn-text {
+            color: var(--primary-accent);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 10px 0;
+            transition: var(--transition-ios);
+        }
         
-        /* Pantalla de Tareas */
-        .top-bar { display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 20px; }
-        .user-badge { display: flex; align-items: center; background: #b2bced; color: white; padding: 5px 15px; border-radius: 20px; color: black; font-weight: bold;}
-        .icon-btn { background: #b2bced; padding: 10px; border-radius: 10px; cursor: pointer; }
-        .task-input { width: 100%; display: flex; background: white; margin-bottom: 20px; border-radius: 5px; overflow: hidden;}
-        .task-input input { flex-grow: 1; padding: 10px; border: none; outline: none; }
-        .btn-row { display: flex; width: 100%; justify-content: space-between; }
-        .btn-row button { padding: 10px; margin: 0; font-size: 14px; flex-grow: 1; margin: 0 5px; }
+        .ios-btn-text:active {
+            opacity: 0.6;
+        }
+
+        /* --- PANTALLA TAREAS (UI ESPECÍFICA) --- */
+        .task-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .user-profile-badge {
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-card);
+            padding: 8px 15px;
+            border-radius: 20px;
+            gap: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .user-avatar-icon {
+            color: var(--primary-accent);
+            font-size: 22px;
+        }
+
+        .user-name {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .settings-icon-btn {
+            color: var(--primary-accent);
+            font-size: 28px;
+            cursor: pointer;
+            transition: var(--transition-ios);
+        }
         
-        .task-list-container { width: 100%; margin-top: 20px; background: #7a7e8a; }
-        .task-header { padding: 10px; border-bottom: 1px solid white; color: #d0d0d0; }
-        .task-item { padding: 10px; border-bottom: 1px solid white; cursor: pointer; }
-        .task-item.selected { background-color: #b2bced; color: black; }
+        .settings-icon-btn:active {
+            transform: rotate(30deg);
+        }
+
+        /* Campo de nueva tarea (iPhone search bar style) */
+        .task-input-container {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .task-input-field {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            padding: 12px 15px;
+            font-size: 17px;
+        }
+
+        .mic-icon-btn {
+            color: var(--text-secondary);
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: var(--transition-ios);
+        }
+        
+        .mic-icon-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        /* Fila de botones de acción (iPhone Segments style) */
+        .task-action-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 25px;
+        }
+
+        .task-action-btn {
+            flex: 1;
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-ios);
+        }
+
+        .task-action-btn:active {
+            background-color: var(--border-color);
+        }
+        
+        /* Botón 'Agregar' destacado */
+        #btn-add-task {
+            background-color: rgba(147, 51, 234, 0.15);
+            color: var(--primary-accent);
+            border-color: rgba(147, 51, 234, 0.3);
+            font-weight: 600;
+        }
+        
+        #btn-add-task:active {
+            background-color: rgba(147, 51, 234, 0.3);
+        }
+
+        /* --- LISTA DE TAREAS (IOS LIST STYLE) --- */
+        .task-list-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .task-list-header {
+            color: var(--text-secondary);
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Elemento de tarea individual (iOS Table Cell) */
+        .task-item {
+            background-color: var(--bg-card);
+            border-radius: 14px;
+            padding: 20px;
+            font-size: 17px;
+            cursor: pointer;
+            transition: var(--transition-ios);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            border: 1px solid transparent;
+        }
+
+        .task-item::after {
+            content: 'chevron_right';
+            font-family: 'Material Icons Round';
+            color: var(--text-secondary);
+            font-size: 20px;
+            opacity: 0.5;
+        }
+
+        /* Estado seleccionado */
+        .task-item.selected {
+            background-color: #2C2C2E;
+            border-color: var(--primary-accent);
+        }
+        
+        .task-item.selected::after {
+            content: 'check_circle';
+            color: var(--primary-accent);
+            opacity: 1;
+        }
+
+        /* --- PANTALLA CONFIGURACIÓN (UI ESPECÍFICA) --- */
+        .settings-info-card {
+            background-color: var(--bg-card);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 15px;
+        }
+        
+        .settings-user-icon {
+            font-size: 60px;
+            color: var(--primary-accent);
+            background: rgba(147, 51, 234, 0.1);
+            padding: 20px;
+            border-radius: 50%;
+        }
+
+        .settings-account-label {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .settings-user-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-accent);
+        }
+
+        .settings-btn-row {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+        
+        .ios-btn-secondary {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 28px;
+            padding: 16px;
+            font-size: 17px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            transition: var(--transition-ios);
+        }
+        
+        .ios-btn-secondary:active {
+            background-color: var(--border-color);
+        }
+
+        .ios-btn-danger {
+            background-color: rgba(255, 59, 48, 0.1);
+            color: #FF3B30; /* Rojo iOS */
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            border-radius: 28px;
+            padding: 16px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: var(--transition-ios);
+        }
+        
+        .ios-btn-danger:active {
+            background-color: rgba(255, 59, 48, 0.2);
+            transform: scale(0.98);
+        }
+
+        .app-footer-brand {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-secondary);
+            padding-bottom: 20px;
+            width: 100%;
+        }
+
+        .app-logo-box {
+            background: white;
+            color: var(--primary-accent);
+            padding: 18px;
+            border-radius: 18px;
+            font-size: 35px;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.1);
+        }
+
+        /* --- LOADING OVERLAY (REEMPLAZO DE CIRCULAR PROGRESS) --- */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            gap: 15px;
+        }
+        
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        /* Spinner estilo iOS */
+        .ios-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
     </style>
 </head>
 <body>
 
 <div class="app-container">
+    
     <div class="header">
-        <span>Task App</span>
-        <span>⋮</span>
+        <div class="header-title">Task App</div>
+        <i class="material-icons-round header-icon-dots">more_vert</i>
     </div>
 
     <div id="screen-login" class="screen active">
-        <div class="title-box">Iniciar Sesión</div>
-        <div style="width: 100%; max-width: 300px;">
-            <div class="input-group">
-                <label>Usuario:</label>
-                <input type="text" id="log-user">
-            </div>
-            <div class="input-group">
-                <label>Contraseña:</label>
-                <input type="password" id="log-pass">
-            </div>
+        <div class="ios-large-title">Iniciar Sesión</div>
+        
+        <div class="ios-input-group">
+            <label class="ios-input-label" for="log-user">Usuario</label>
+            <input type="text" id="log-user" class="ios-input-field" placeholder="ej. Gato">
         </div>
-        <div style="display:flex; align-items:center; gap:10px; margin-top:20px;">
-            <span style="font-size:14px;">¿No tienes una cuenta? Da click</span>
-            <span class="link" onclick="switchScreen('screen-register')">aqui</span>
+        <div class="ios-input-group">
+            <label class="ios-input-label" for="log-pass">Contraseña</label>
+            <input type="password" id="log-pass" class="ios-input-field" placeholder="••••••••">
         </div>
-        <button onclick="login()">Entrar</button>
+
+        <div style="text-align: center; margin-top: 15px;">
+            <span style="color: var(--text-secondary); font-size: 15px;">¿No tienes una cuenta? Da click </span>
+            <button class="ios-btn-text" onclick="switchScreen('screen-register')">aquí</button>
+        </div>
+        
+        <button class="ios-btn-primary" onclick="login()">Entrar</button>
     </div>
 
     <div id="screen-register" class="screen">
-        <div class="title-box">Registro</div>
-        <div style="width: 100%; max-width: 300px;">
-            <div class="input-group">
-                <label>Usuario:</label>
-                <input type="text" id="reg-user">
-            </div>
-            <div class="input-group">
-                <label>Contraseña:</label>
-                <input type="password" id="reg-pass">
-            </div>
+        <div class="ios-large-title">Registro</div>
+        
+        <div class="ios-input-group">
+            <label class="ios-input-label" for="reg-user">Usuario</label>
+            <input type="text" id="reg-user" class="ios-input-field" placeholder="Crea tu usuario">
         </div>
-        <div style="display:flex; align-items:center; gap:10px; margin-top:20px;">
-            <span style="font-size:14px;">¿Ya tienes una cuenta? Da click</span>
-            <span class="link" onclick="switchScreen('screen-login')">aqui</span>
+        <div class="ios-input-group">
+            <label class="ios-input-label" for="reg-pass">Contraseña</label>
+            <input type="password" id="reg-pass" class="ios-input-field" placeholder="Mín. 6 caracteres">
         </div>
-        <button onclick="register()">Registrarse</button>
+
+        <div style="text-align: center; margin-top: 15px;">
+            <span style="color: var(--text-secondary); font-size: 15px;">¿Ya tienes una cuenta? Da click </span>
+            <button class="ios-btn-text" onclick="switchScreen('screen-login')">aquí</button>
+        </div>
+        
+        <button class="ios-btn-primary" onclick="register()">Registrarse</button>
     </div>
 
     <div id="screen-tasks" class="screen">
-        <div class="top-bar">
-            <div class="user-badge">👤 <span id="lbl-user"></span></div>
-            <div class="icon-btn" onclick="switchScreen('screen-settings')">⚙️</div>
+        
+        <div class="task-top-bar">
+            <div class="user-profile-badge">
+                <i class="material-icons-round user-avatar-icon">account_circle</i>
+                <span id="lbl-user" class="user-name">Usuario</span>
+            </div>
+            <i class="material-icons-round settings-icon-btn" onclick="openSettings()">settings</i>
         </div>
         
-        <label style="margin-bottom: 5px; font-size: 18px;">Escribe tu tarea:</label>
-        <div class="task-input">
-            <input type="text" id="new-task">
-            <div style="background:gray; padding:10px; cursor:pointer;">🎤</div>
+        <div class="task-input-container">
+            <input type="text" id="new-task" class="task-input-field" placeholder="Escribe tu tarea aquí...">
+            <i class="material-icons-round mic-icon-btn">mic</i>
         </div>
 
-        <div class="btn-row">
-            <button onclick="addTask()">Agregar</button>
-            <button onclick="completeTask()">Completar</button>
-            <button onclick="clearTasks()">Borrar todo</button>
+        <div class="task-action-row">
+            <button id="btn-add-task" class="task-action-btn" onclick="addTask()">Agregar</button>
+            <button class="task-action-btn" onclick="completeTask()">Completar</button>
+            <button class="task-action-btn" onclick="clearTasks()">Borrar todo</button>
         </div>
 
-        <div class="task-list-container">
-            <div class="task-header">Mis tareas:</div>
-            <div id="task-list"></div>
+        <div class="task-list-section">
+            <div class="task-list-header">
+                <i class="material-icons-round" style="font-size: 22px;">format_list_bulleted</i>
+                Mis tareas
+            </div>
+            <div id="task-list">
+                <div class="task-item" onclick="selectTask(this)">Comer comida</div>
+                <div class="task-item" onclick="selectTask(this)">de que ya</div>
+            </div>
         </div>
     </div>
 
     <div id="screen-settings" class="screen">
-        <div class="title-box">Configuración</div>
-        <h3 style="font-weight: normal;">Cuenta: 👤 <span id="lbl-user-settings" style="color:#b2bced;"></span></h3>
+        <div class="ios-large-title">Configuración</div>
         
-        <button onclick="switchScreen('screen-tasks')">Regresar</button>
-        <button onclick="logout()">Cerrar Sesión</button>
+        <div class="settings-info-card">
+            <i class="material-icons-round settings-user-icon">person</i>
+            <div class="settings-account-label">Cuenta activa</div>
+            <div id="lbl-user-settings" class="settings-user-name">Gato</div>
+        </div>
 
-        <div style="margin-top: auto; text-align: center;">
-            <div style="background:white; color:#3f51b5; padding:15px; border-radius:15px; display:inline-block; font-size:30px;">✔️</div>
-            <p>©Task App</p>
+        <div class="settings-btn-row">
+            <button class="ios-btn-secondary" onclick="switchScreen('screen-tasks')">
+                <i class="material-icons-round" style="font-size: 18px; vertical-align: middle; margin-right: 5px;">arrow_back</i>
+                Regresar
+            </button>
+            <button class="ios-btn-danger" onclick="logout()">
+                <i class="material-icons-round" style="font-size: 18px; vertical-align: middle; margin-right: 5px;">logout</i>
+                Cerrar Sesión
+            </button>
+        </div>
+
+        <div class="app-footer-brand">
+            <div class="app-logo-box">
+                <i class="material-icons-round">task_alt</i>
+            </div>
+            <p style="font-size: 16px; font-weight: 500; color: white;">Task App</p>
+            <p style="font-size: 13px;">© 2024 Task App Inc.</p>
         </div>
     </div>
 
-</div>
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="ios-spinner"></div>
+        <div id="loading-text" style="font-size: 15px; font-weight: 500;">Cargando...</div>
+    </div>
 
-<script>
+</div> <script>
+    // --- LÓGICA DE LA APLICACIÓN (Basada en los Bloques de MIT) ---
+
     let currentUser = "";
-    let selectedIndex = -1;
+    let selectedTaskElement = null;
 
-    function switchScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
+    // Función para cambiar de pantalla con animación iOS
+    function switchScreen(screenId, callback = null) {
+        const currentActive = document.querySelector('.screen.active');
+        const nextScreen = document.getElementById(screenId);
+
+        if (currentActive && currentActive.id === screenId) return;
+
+        // Ocultar pantalla actual
+        if (currentActive) {
+            currentActive.style.opacity = '0';
+            currentActive.style.transform = 'translateY(-20px)';
+            
+            setTimeout(() => {
+                currentActive.classList.remove('active');
+                
+                // Preparar y mostrar nueva pantalla
+                nextScreen.classList.add('active');
+                // Forzar reflow para que la animación funcione
+                nextScreen.offsetHeight; 
+                nextScreen.style.opacity = '1';
+                nextScreen.style.transform = 'translateY(0)';
+                
+                if (callback) callback();
+            }, 300); // Tiempo de la transición CSS
+        } else {
+            // Carga inicial
+            nextScreen.classList.add('active');
+            nextScreen.style.opacity = '1';
+            nextScreen.style.transform = 'translateY(0)';
+            if (callback) callback();
+        }
     }
 
-    // Lógica de Login
+    // Función para simular carga (CircularProgress visible to true/false)
+    function showLoading(text = "Cargando...", duration = 1000, callback) {
+        const overlay = document.getElementById('loading-overlay');
+        document.getElementById('loading-text').innerText = text;
+        overlay.classList.add('active');
+        
+        setTimeout(() => {
+            overlay.classList.remove('active');
+            if (callback) callback();
+        }, duration);
+    }
+
+    // Lógica de Login (Respeta bloques Imagen 4)
     function login() {
         let u = document.getElementById('log-user').value.trim();
         let p = document.getElementById('log-pass').value.trim();
 
         if (u === "" || p === "") {
-            alert("No dejes espacios en blanco");
+            alert("No dejes espacios en blanco"); // Notifier.ShowAlert
             return;
         }
 
+        // Simula base de datos local (localStorage reemplaza TinyDB)
         let savedPass = localStorage.getItem("user_" + u);
-        if (savedPass === p) {
+        
+        if (savedPass === p && savedPass !== null) {
+            // Login exitoso
             currentUser = u;
             document.getElementById('lbl-user').innerText = u;
             document.getElementById('lbl-user-settings').innerText = u;
-            loadTasks();
-            switchScreen('screen-tasks');
+            
+            // Simula CircularProgress1.Visible to true
+            showLoading("Bienvenido...", 1200, () => {
+                loadTasks();
+                switchScreen('screen-tasks'); // open another screen screenName TaskList
+            });
         } else {
-            alert("Usuario o contraseña incorrectos");
+            alert("Usuario o contraseña incorrectos"); // Notifier.ShowAlert
         }
     }
 
-    // Lógica de Registro
+    // Lógica de Registro (Respeta bloques Imagen 5)
     function register() {
         let u = document.getElementById('reg-user').value.trim();
         let p = document.getElementById('reg-pass').value.trim();
 
         if (u === "" || p === "") {
-            alert("No dejes espacios en blanco");
+            alert("No dejes espacios en blanco"); // Notifier.ShowAlert
             return;
         }
 
+        // Verifica si ya existe (is in list? thing: global user, list: TinyDB.GetTags)
         if (localStorage.getItem("user_" + u) !== null) {
-            alert("Este usuario ya existe");
+            alert("Este usuario ya existe"); // Notifier.ShowAlert
         } else {
+            // Almacena (TinyDB.StoreValue tag: global user, valueToStore: password)
             localStorage.setItem("user_" + u, p);
-            alert("Registrado exitosamente");
-            switchScreen('screen-login');
+            
+            // Simula CircularProgress2.Visible to true
+            showLoading("Registrando...", 1500, () => {
+                alert("Registrado exitosamente"); // Notifier.ShowAlert
+                // Limpia campos
+                document.getElementById('reg-user').value = "";
+                document.getElementById('reg-pass').value = "";
+                switchScreen('screen-login'); // open another screen screenName Screen1
+            });
         }
     }
 
-    // Lógica de Tareas
+    // --- LÓGICA DE TAREAS (Respeta bloques Imagen 6) ---
+
+    // Obtener lista de tareas del usuario actual
     function getTasks() {
         let t = localStorage.getItem("tasks_" + currentUser);
         return t ? JSON.parse(t) : [];
     }
 
+    // Guardar lista de tareas
     function saveTasks(tasks) {
         localStorage.setItem("tasks_" + currentUser, JSON.stringify(tasks));
     }
 
+    // Cargar y renderizar tareas (TaskList.Initialize)
     function loadTasks() {
         let tasks = getTasks();
         let listHtml = document.getElementById('task-list');
-        listHtml.innerHTML = "";
-        selectedIndex = -1;
+        listHtml.innerHTML = ""; // Limpia ListView1
+        selectedTaskElement = null;
+
+        if (tasks.length === 0) {
+            listHtml.innerHTML = `<div style="text-align:center; color:var(--text-secondary); padding:20px; font-size:15px;">No tienes tareas pendientes.<br>¡Agrega una arriba!</div>`;
+            return;
+        }
 
         tasks.forEach((task, index) => {
             let div = document.createElement('div');
             div.className = 'task-item';
             div.innerText = task;
-            div.onclick = function() {
-                document.querySelectorAll('.task-item').forEach(el => el.classList.remove('selected'));
-                div.classList.add('selected');
-                selectedIndex = index;
-            };
+            div.dataset.index = index; // Guarda el índice
+            div.onclick = function() { selectTask(this); }; // ListView1.AfterPicking
             listHtml.appendChild(div);
         });
     }
 
+    // Selección de tarea (ListView1.Selection)
+    function selectTask(element) {
+        // Deseleccionar anterior
+        if (selectedTaskElement) {
+            selectedTaskElement.classList.remove('selected');
+        }
+        
+        // Seleccionar nueva
+        if (selectedTaskElement === element) {
+            selectedTaskElement = null; // Deseleccionar si se toca de nuevo
+        } else {
+            selectedTaskElement = element;
+            selectedTaskElement.classList.add('selected');
+        }
+    }
+
+    // Agregar tarea (btadd.Click)
     function addTask() {
         let input = document.getElementById('new-task');
-        if (input.value.trim() !== "") {
+        let taskText = input.value.trim();
+        
+        if (taskText !== "") {
             let tasks = getTasks();
-            tasks.push(input.value.trim());
-            saveTasks(tasks);
-            input.value = "";
-            loadTasks();
+            tasks.push(taskText); // add items to list
+            saveTasks(tasks); // TinyDB.StoreValue
+            
+            input.value = ""; // tbtask.Text to ""
+            loadTasks(); // Actualiza ListView1
+            input.focus();
         }
     }
 
+    // Completar/Borrar tarea seleccionada (btcom.Click)
     function completeTask() {
-        if (selectedIndex !== -1) {
+        if (selectedTaskElement) {
             let tasks = getTasks();
-            tasks.splice(selectedIndex, 1);
-            saveTasks(tasks);
-            loadTasks();
+            let indexToRemove = selectedTaskElement.dataset.index;
+            
+            tasks.splice(indexToRemove, 1); // remove list item list: global ToDo, index: ListView1.SelectionIndex
+            saveTasks(tasks); // TinyDB.StoreValue
+            
+            showLoading("Completando...", 500, () => {
+                loadTasks(); // Actualiza ListView1
+            });
+        } else {
+            alert("Selecciona una tarea primero.");
         }
     }
 
+    // Borrar todo (bterase.Click)
     function clearTasks() {
-        saveTasks([]);
-        loadTasks();
+        if (getTasks().length > 0) {
+            if(confirm("¿Estás seguro de borrar TODAS tus tareas?")) {
+                saveTasks([]); // set global ToDo to create empty list / TinyDB.ClearTag
+                loadTasks(); // Actualiza ListView1
+            }
+        }
     }
 
-    function logout() {
-        currentUser = "";
-        document.getElementById('log-user').value = "";
-        document.getElementById('log-pass').value = "";
-        switchScreen('screen-login');
+    // --- LÓGICA DE CONFIGURACIÓN Y SESIÓN (Respeta bloques Imagen 7) ---
+
+    // Abrir configuración (btset2.Click)
+    function openSettings() {
+        // Simula CircularProgress2.Visible to true
+        showLoading("Abriendo...", 600, () => {
+            switchScreen('screen-settings'); // open another screen screenName Settings
+        });
     }
+
+    // Cerrar Sesión (btcer.Click)
+    function logout() {
+        if(confirm("¿Cerrar sesión de " + currentUser + "?")) {
+            // Simula CircularProgress1.Visible to true
+            showLoading("Saliendo...", 1000, () => {
+                currentUser = "";
+                // Limpia campos de login
+                document.getElementById('log-user').value = "";
+                document.getElementById('log-pass').value = "";
+                switchScreen('screen-login'); // open another screen screenName Screen1
+            });
+        }
+    }
+
+    // Soporte para Enter en los inputs
+    document.getElementById('log-pass').addEventListener('keypress', function(e) { if(e.key === 'Enter') login(); });
+    document.getElementById('reg-pass').addEventListener('keypress', function(e) { if(e.key === 'Enter') register(); });
+    document.getElementById('new-task').addEventListener('keypress', function(e) { if(e.key === 'Enter') addTask(); });
+
 </script>
 
 </body>
